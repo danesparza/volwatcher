@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/viper"
 	"github.com/volwatcher/internal/app"
+	"github.com/volwatcher/internal/folder"
 	"os"
 	"os/exec"
 	"strings"
@@ -49,7 +50,7 @@ func main() {
 	//	Set log time format
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	log.Info().Msg("Starting check")
+	log.Debug().Msg("Starting check")
 
 	// Find home directory.
 	home, err := homedir.Dir()
@@ -77,10 +78,10 @@ func main() {
 
 	//	For each volume entry, see if it exists:
 	for _, item := range C.Volumes {
-		log.Info().Str("folder", item.Folder).Msg("Checking folder")
+		log.Debug().Str("folder", item.Folder).Msg("Checking folder")
 
 		//	If it doesn't exist, run mount it with the command listed
-		if _, err := os.Stat(item.Folder); os.IsNotExist(err) {
+		if folder.DoesNotExist(item.Folder) {
 			log.Info().Str("folder", item.Folder).Str("mountscript", item.MountScript).Msg("Folder does not exist.  Running mount command")
 
 			//	Do we need to run this with some retry logic?
@@ -93,12 +94,24 @@ func main() {
 			}
 
 			//	Check it again
+			if folder.DoesExist(item.Folder) {
+				log.Info().Str("folder", item.Folder).Msg("Folder exists now")
 
-			//	If it exists now and if we have an AfterMount script, run it
-			//	Example: docker compose -f /path/to/your/docker-compose.yml restart
+				//	If it exists now and if we have an AfterMount script, run it
+				//	Example: docker compose -f /path/to/your/docker-compose.yml restart
+				if len(strings.TrimSpace(item.AfterMount)) > 0 {
+					log.Info().Str("folder", item.Folder).Msg("Running after mount script")
+					cmdAfterMount := exec.CommandContext(ctx, "/bin/bash", "-c", item.AfterMount)
+					err := cmdAfterMount.Run()
+					if err != nil {
+						log.Err(err).Str("folder", item.Folder).Msg("After mount script failed")
+						continue
+					}
+				}
+			}
 		}
 	}
 
-	log.Info().Msg("Shutting down")
+	log.Debug().Msg("Shutting down")
 
 }
