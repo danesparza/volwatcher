@@ -1,0 +1,9 @@
+{
+  "volumes": [
+    {
+      "folder": "/Volumes/AutoProcess",
+      "mountscript": "osascript -e 'mount volume \"smb://username:password@hostname.tld/MySpecialSharename\"'",
+      "aftermount": "docker compose -f /path/to/your/docker-compose.yml restart"
+    }
+  ]
+}
