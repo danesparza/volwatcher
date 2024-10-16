@@ -31,7 +31,6 @@ jobs:
   test:
     name: Tests
     runs-on: macos-14
-    container: golang:latest
 
     steps:
       - uses: actions/checkout@v3
