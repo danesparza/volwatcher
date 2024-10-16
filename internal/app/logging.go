@@ -14,7 +14,7 @@ func InitLogging() {
 	log.Logger = log.With().Timestamp().Caller().Logger().Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	//	Set log level (default to info)
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	switch strings.ToLower(os.Getenv("LOGGER_LEVEL")) {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
